@@ -1,3 +1,5 @@
+
+
 INSERT INTO query1 (
 SELECT COUNT(S.sid) as num
 FROM student S, department D
