@@ -1,0 +1,5 @@
+\i a2drop;
+\i A2.ddl;
+\i a2tables;
+\i a2sql;
+\q

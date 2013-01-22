@@ -1,0 +1,29 @@
+CREATE TABLE Query1 (
+        num         INTEGER PRIMARY KEY);
+CREATE TABLE Query2 (
+        dname        VARCHAR(20) NOT NULL);
+CREATE TABLE Query3 (
+        dept         VARCHAR(20) NOT NULL,
+        sid          INTEGER PRIMARY KEY,
+        slastname    VARCHAR(20) NOT NULL,
+        sfirstname   VARCHAR(20) NOT NULL,
+	AVGgrade     INTEGER NOT NULL);
+CREATE TABLE Query4 (
+        year         INTEGER NOT NULL,
+	enrollment   INTEGER NOT NULL,
+        PRIMARY KEY (year,enrollment));
+CREATE TABLE Query5 (
+        cname         VARCHAR(20) PRIMARY KEY);
+CREATE TABLE Query6 (
+        fname       VARCHAR(20) NOT NULL,
+        lname  	    VARCHAR(20) NOT NULL,
+        cname       VARCHAR(20) NOT NULL,
+        year        INTEGER NOT NULL,
+        semester    INTEGER NOT NULL,
+        PRIMARY KEY (fname, lname, cname, year, semester));
+CREATE TABLE Query7 (
+        cname   	VARCHAR(20) NOT NULL,
+        semester        INTEGER NOT NULL,
+        year 	        INTEGER NOT NULL,
+        avgmark         INTEGER NOT NULL,
+        PRIMARY KEY (cname, semester, year, avgmark));

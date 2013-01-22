@@ -1,0 +1,148 @@
+INSERT INTO query1 (
+SELECT COUNT(S.sid) as num
+FROM student S, department D
+WHERE S.dcode = D.dcode AND D.dname = 'Computer Science' AND S.sex = 'F' AND S.yearofstudy = 4)
+;
+
+
+
+CREATE VIEW phddept AS 
+	SELECT D.dname, COUNT(D.dname) AS cnt
+	FROM instructor I, department D
+	WHERE D.dcode = I.dcode AND I.idegree <> 'PHD'
+	GROUP BY D.dname
+;
+
+INSERT INTO Query2(
+SELECT P.dname
+FROM phddept P
+WHERE P.cnt = (SELECT MAX(h.cnt) FROM phddept h))
+;
+DROP VIEW phddept;
+
+
+
+
+CREATE VIEW curryear AS (SELECT MAX(year) AS yr FROM courseSection);
+CREATE VIEW semincurryear AS (SELECT MAX(semester) AS sem FROM courseSection WHERE year IN (SELECT yr FROM curryear));
+CREATE VIEW cbn AS 
+	SELECT csid
+	FROM courseSection
+	WHERE (year NOT IN (SELECT yr FROM curryear) OR 
+	(year IN (SELECT yr FROM curryear) AND semester NOT IN (SELECT sem FROM semincurryear)))
+;
+CREATE VIEW sgs AS
+	SELECT R.sid, AVG(R.grade) AS AVGgrade, D.dcode AS dept
+	FROM cbn C, studentCourse R, department D, student S
+	WHERE C.csid = R.csid AND D.dcode = S.dcode AND S.sid = R.sid
+	GROUP BY R.sid, D.dcode
+;
+INSERT INTO Query3 (
+SELECT S.dept, S.sid, R.sfirstname, R.slastname, S.AVGgrade
+FROM sgs S, student R
+WHERE S.AVGgrade = (SELECT Max(Q.AVGgrade) FROM sgs Q WHERE Q.dept=S.dept) AND S.sid = R.sid)
+;
+DROP VIEW sgs;
+DROP VIEW cbn;
+DROP VIEW semincurryear;
+DROP VIEW curryear;
+
+
+
+CREATE VIEW scntyear AS
+	SELECT C.year, COUNT(S.sid) AS enrollment
+	FROM studentCourse S, courseSection C, Department D
+	WHERE S.csid = C.csid AND D.dcode = C.dcode AND D.dname = 'Computer Science'
+	GROUP BY C.year
+;
+INSERT INTO Query4 (
+SELECT *
+FROM scntyear S
+WHERE S.enrollment = (SELECT MAX(R.enrollment) FROM scntyear R))
+;
+DROP VIEW scntyear;
+
+
+
+
+
+INSERT INTO Query5 (
+SELECT DISTINCT c.cname
+FROM course C
+WHERE C.cid NOT IN (SELECT R.cid
+	FROM courseSection R
+	WHERE R.dcode = C.dcode AND semester <> 5)
+	AND C.cid IN (SELECT R.cid
+	FROM courseSection R
+	WHERE R.dcode = C.dcode AND semester = 5))
+;
+
+
+
+
+
+CREATE VIEW stucor AS
+	SELECT S.sid, C.cid, C.dcode, C.year, C.semester
+	FROM studentCourse S, courseSection C
+	WHERE S.csid = C.csid
+;
+CREATE VIEW stumisspreq AS
+	SELECT A.sid, A.cid, A.dcode, A.year, A.semester
+	FROM stucor A, prerequisites P
+	WHERE A.cid = P.cid AND A.dcode = P.dcode AND P.pcid NOT IN (
+	SELECT B.cid
+	FROM stucor B
+	WHERE A.sid = B.sid AND (A.year > B.year OR (A.year=B.year AND B.semester < A.semester))
+	AND P.pdcode = B.dcode
+	)
+;
+INSERT INTO Query6 (
+SELECT S.sfirstname AS fname, S.slastname AS lname, C.cname, A.year, A.semester
+FROM stumisspreq A, course C, student S
+WHERE C.cid = A.cid AND C.dcode = A.dcode AND A.sid = S.sid)
+;
+DROP VIEW stumisspreq;
+DROP VIEW stucor;
+
+
+
+
+
+
+CREATE VIEW csclass AS
+	SELECT C.csid, C.year, C.semester, C.cid
+	FROM courseSection C, department D 
+	WHERE C.dcode = D.dcode AND D.dname = 'Computer Science'
+;
+CREATE VIEW csstew AS
+	SELECT C.csid, C.year, C.semester, S.grade, C.cid, S.sid
+	FROM csclass C, studentCourse S 
+	WHERE C.csid = S.csid
+;
+CREATE VIEW corgrad AS
+	SELECT A.csid, A.year, A.semester, AVG(A.grade) AS avgmark, A.cid
+	FROM csstew A
+	GROUP BY A.csid, A.year, A.semester, A.cid
+	HAVING COUNT(A.sid) > 2
+;
+INSERT INTO Query7 (
+SELECT C.cname, A.semester, A.year, A.avgmark
+FROM corgrad A, course C
+WHERE (A.avgmark IN (
+	SELECT MIN(B.avgmark)
+	FROM corgrad B) 
+	OR A.avgmark IN (
+	SELECT MAX(D.avgmark)
+	FROM corgrad D)
+	) 
+	AND C.cid = A.cid 
+	AND C.dcode = (
+	SELECT E.dcode
+	FROM Department E
+	WHERE E.dname = 'Computer Science'))
+;
+DROP VIEW corgrad;
+DROP VIEW csstew;
+DROP VIEW csclass;
+
+
